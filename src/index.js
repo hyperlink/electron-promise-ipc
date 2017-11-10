@@ -1,4 +1,4 @@
-import isRenderer from 'is-electron-renderer';
+const isRenderer = require('is-electron-renderer');
 
 if (isRenderer) {
   module.exports = require('./renderer');

@@ -1,15 +1,15 @@
-import { ipcRenderer } from 'electron'; // eslint-disable-line
-import uuid from 'uuid/v4';
-import Promise from 'bluebird';
+const { ipcRenderer } = require('electron'); // eslint-disable-line
+const uuid = require('uuid/v4');
+const Promise = require('bluebird');
 
-export class PromiseIpcRenderer {
-  constructor(opts) {
+class PromiseIpcRenderer {
+  constructor (opts) {
     if (opts) {
       this.maxTimeoutMs = opts.maxTimeoutMs;
     }
   }
 
-  send(route, ...dataArgs) {
+  send (route, ...dataArgs) {
     return new Promise((resolve, reject) => {
       const replyChannel = `${route}#${uuid()}`;
       let timeout;
@@ -43,15 +43,16 @@ export class PromiseIpcRenderer {
 
   // If I ever implement `off`, then this method will actually use `this`.
   // eslint-disable-next-line class-methods-use-this
-  on(route, listener) {
+  on (route, listener) {
     ipcRenderer.on(route, (event, replyChannel, ...dataArgs) => {
       // Chaining off of Promise.resolve() means that listener can return a promise, or return
       // synchronously -- it can even throw. The end result will still be handled promise-like.
-      Promise.resolve().then(() => listener(...dataArgs))
-        .then((results) => {
+      Promise.resolve()
+        .then(() => listener(...dataArgs))
+        .then(results => {
           ipcRenderer.send(replyChannel, 'success', results);
         })
-        .catch((e) => {
+        .catch(e => {
           const message = e && e.message ? e.message : e;
           ipcRenderer.send(replyChannel, 'failure', message);
         });
@@ -59,6 +60,4 @@ export class PromiseIpcRenderer {
   }
 }
 
-export const PromiseIpc = PromiseIpcRenderer;
-
-export default new PromiseIpcRenderer();
+module.exports = new PromiseIpcRenderer();

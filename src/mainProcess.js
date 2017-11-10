@@ -1,16 +1,16 @@
-import { ipcMain } from 'electron'; // eslint-disable-line
-import uuid from 'uuid/v4';
-import Promise from 'bluebird';
+const { ipcMain } = require('electron'); // eslint-disable-line
+const uuid = require('uuid/v4');
+const Promise = require('bluebird');
 
-export class PromiseIpcMain {
-  constructor(opts) {
+class PromiseIpcMain {
+  constructor (opts) {
     if (opts) {
       this.maxTimeoutMs = opts.maxTimeoutMs;
     }
   }
 
   // Send requires webContents -- see http://electron.atom.io/docs/api/ipc-main/
-  send(route, webContents, ...dataArgs) {
+  send (route, webContents, ...dataArgs) {
     return new Promise((resolve, reject) => {
       const replyChannel = `${route}#${uuid()}`;
       let timeout;
@@ -44,15 +44,16 @@ export class PromiseIpcMain {
 
   // If I ever implement `off`, then this method will actually use `this`.
   // eslint-disable-next-line class-methods-use-this
-  on(route, listener) {
+  on (route, listener) {
     ipcMain.on(route, (event, replyChannel, ...dataArgs) => {
       // Chaining off of Promise.resolve() means that listener can return a promise, or return
       // synchronously -- it can even throw. The end result will still be handled promise-like.
-      Promise.resolve().then(() => listener(...dataArgs))
-        .then((results) => {
+      Promise.resolve()
+        .then(() => listener(...dataArgs))
+        .then(results => {
           event.sender.send(replyChannel, 'success', results);
         })
-        .catch((e) => {
+        .catch(e => {
           const message = e && e.message ? e.message : e;
           event.sender.send(replyChannel, 'failure', message);
         });
@@ -60,7 +61,4 @@ export class PromiseIpcMain {
   }
 }
 
-export const PromiseIpc = PromiseIpcMain;
-
-
-export default new PromiseIpcMain();
+module.exports = new PromiseIpcMain();
